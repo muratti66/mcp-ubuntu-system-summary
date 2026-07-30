@@ -2,6 +2,10 @@
 
 [English](README_EN.md)
 
+> **Resmi olmayan (unofficial) bir projedir.** Canonical/Ubuntu, Anthropic
+> ya da Model Context Protocol projesiyle herhangi bir bağlantısı ya da
+> onayı yoktur; bağımsız olarak geliştirilmiştir.
+
 Ubuntu sunucusunun genel durumunu (sürüm, kaynak kullanımı, apt güncellemeleri,
 servis sağlığı, güvenlik özeti, loglar, donanım) AI istemcilerine (Claude
 Desktop, Claude Code, Open WebUI) MCP tool'ları olarak sunan **tamamen

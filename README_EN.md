@@ -2,6 +2,10 @@
 
 [Türkçe](README.md)
 
+> **This is an unofficial project.** It is not affiliated with, endorsed by,
+> or connected to Canonical/Ubuntu, Anthropic, or the Model Context Protocol
+> project; it is developed independently.
+
 A **fully read-only** server that collects general status information about
 an Ubuntu server (version, resource usage, apt updates, service health,
 security summary, logs, hardware) and exposes it to AI clients (Claude
