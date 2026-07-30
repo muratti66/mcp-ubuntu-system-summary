@@ -1,0 +1,56 @@
+services:
+  ubuntu-system-summary:
+    build: .
+    image: ubuntu-system-summary-mcp:latest
+    container_name: ubuntu-system-summary-mcp
+    restart: unless-stopped
+
+    # stdio: Claude Desktop/Code `docker attach` ya da `docker exec` ile stdin/stdout
+    # üzerinden konuşur, ayrıca port açmaya gerek yoktur.
+    # streamable-http: Open WebUI gibi HTTP istemcileri için TRANSPORT=streamable-http
+    # yapıp aşağıdaki "ports" bloğunu aç.
+    environment:
+      TRANSPORT: ${TRANSPORT:-stdio}
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: 8000
+    # ports:
+    #   - "127.0.0.1:8000:8000"   # sadece intranet/WireGuard arayüzüne bind etmeyi tercih et
+
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    group_add:
+      - "${ADM_GID:?adm GID .env dosyasında tanımlanmalı}"
+      - "${SYSTEMD_JOURNAL_GID:?systemd-journal GID .env dosyasında tanımlanmalı}"
+      - "${UTMP_GID:?utmp GID .env dosyasında tanımlanmalı}"
+
+    volumes:
+      # 1. Sürüm & Kernel
+      - /etc/os-release:/etc/os-release:ro
+      # 4. Apt / Güncelleme — tazelik host'taki apt-daily.timer/cron'a bağlı, bkz. README
+      - /var/lib/apt/lists:/var/lib/apt/lists:ro
+      - /var/lib/dpkg/status:/var/lib/dpkg/status:ro
+      - /var/log/unattended-upgrades:/var/log/unattended-upgrades:ro
+      # 5. Servis Sağlığı — host systemd'sine D-Bus üzerinden salt-okunur sorgu
+      - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      # 6. Güvenlik Özeti — last login artık auth.log'dan parse ediliyor (last/wtmp
+      # bağımlılığı kaldırıldı, bkz. PLAN.md); /run/utmp sadece "aktif oturumlar"
+      # (who) için gerekli.
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /run/utmp:/run/utmp:ro
+      # 7. Log'lar (journalctl -k + syslog, aynı journal mount'unu kullanır)
+      - /var/log/journal:/var/log/journal:ro
+      # 8. Donanım — systemd-detect-virt yerine doğrudan DMI okunuyor
+      - /sys/class/dmi/id:/sys/class/dmi/id:ro
+      # 2. Kaynak Kullanımı — disk/inode probe dizinleri (PLAN.md'deki yöntem).
+      # Her izlenecek mount noktası için host'ta boş bir dizin oluşturup buraya
+      # ekle: mkdir -p /.mcp-disk-probe && mount edilecek dizinin adı container
+      # içindeki etiket olarak kullanılır.
+      - /.mcp-disk-probe:/probe/root:ro
+      # - /home/.mcp-disk-probe:/probe/home:ro
+      # - /var/.mcp-disk-probe:/probe/var:ro
